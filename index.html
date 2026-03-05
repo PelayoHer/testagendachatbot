@@ -13,10 +13,10 @@
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
             margin: 0;
-            padding: 15px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,7 +25,7 @@
         .container {
             width: 100%;
             max-width: 500px;
-            height: 96vh;
+            height: 97vh;
             display: flex;
             flex-direction: column;
         }
@@ -34,36 +34,23 @@
             flex-grow: 1;
             background: white;
             border-radius: 25px;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             border: 1px solid #eee;
         }
 
         .msg {
             max-width: 85%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border-radius: 20px;
             font-size: 15px;
             line-height: 1.5;
             white-space: pre-wrap;
-            animation: pop 0.3s ease;
-        }
-
-        @keyframes pop {
-            from {
-                opacity: 0;
-                transform: scale(0.9);
-            }
-
-            to {
-                opacity: 1;
-                transform: scale(1);
-            }
         }
 
         .user {
@@ -78,14 +65,14 @@
             background: var(--bot);
             color: #1a1f23;
             border-bottom-left-radius: 4px;
-            border: 1px solid #e8e8e8;
+            border: 1px solid #e0e0e0;
         }
 
         .input-area {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             background: white;
-            padding: 12px 20px;
+            padding: 10px 15px;
             border-radius: 50px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
@@ -102,44 +89,39 @@
             background: var(--main);
             color: white;
             border: none;
-            padding: 12px 25px;
+            padding: 10px 25px;
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            transition: 0.2s;
         }
 
-        button:disabled {
-            background: #ccc;
-        }
-
-        .search-area {
-            margin-top: 10px;
+        .agenda-search {
             background: white;
-            padding: 18px;
-            border-radius: 20px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            padding: 12px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-top: 5px;
+            font-size: 13px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 13px;
+            margin-top: 5px;
         }
 
         td {
-            padding: 10px 0;
+            padding: 8px 0;
             border-bottom: 1px solid #f0f0f0;
         }
 
         .del {
-            color: #d93025;
+            color: red;
             cursor: pointer;
+            float: right;
             font-weight: bold;
             border: none;
             background: none;
-            float: right;
         }
     </style>
 </head>
@@ -147,20 +129,20 @@
 <body>
     <div class="container">
         <div id="chatWindow">
-            <div class="msg bot">¡Hola! Soy tu asistente inteligente. ¿Quieres pedir cita o consultar cuándo tienes que
+            <div class="msg bot">¡Hola! Soy tu asistente del taller. ¿Quieres pedir cita o consultar cuándo tienes que
                 venir?</div>
         </div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Ej: ¿Qué citas tengo? o Quiero cita el lunes..."
+            <input type="text" id="userInput" placeholder="Escribe aquí..."
                 onkeypress="if(event.key==='Enter') enviarChat()">
             <button id="btnSend" onclick="enviarChat()">Enviar</button>
         </div>
-        <div class="search-area">
-            <div style="display: flex; gap: 10px;">
+        <div class="agenda-search">
+            <div style="display: flex; gap: 8px;">
                 <input type="text" id="searchId"
-                    style="border: 1px solid #ddd; border-radius: 12px; padding: 10px; width: 60%;"
+                    style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; width: 60%;"
                     placeholder="Nombre para buscar">
-                <button style="background: #34a853; width: 40%;" onclick="listarPrivado()">Ver Citas</button>
+                <button style="background: #34a853; width: 40%;" onclick="listarPrivado()">Ver Agenda</button>
             </div>
             <table id="miAgenda"></table>
         </div>
@@ -185,13 +167,13 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "RESERVAR", history: chatHistory }) });
                 const data = await res.json();
-                const botMsg = data.botResponse || "Lo siento, ¿podrías repetirlo?";
+                const botMsg = data.botResponse || "Dime algo más, por favor.";
                 chat.innerHTML += `<div class="msg bot">${botMsg}</div>`;
                 chatHistory.push({ role: "model", parts: [{ text: botMsg }] });
                 chat.scrollTop = chat.scrollHeight;
                 if (data.success && data.botResponse.includes("confirmada")) listarPrivado();
             } catch (e) {
-                chat.innerHTML += `<div class="msg bot" style="color:red">He perdido la conexión un momento. ¿Repites?</div>`;
+                chat.innerHTML += `<div class="msg bot" style="color:red">Error de conexión. Inténtalo de nuevo.</div>`;
             } finally { btn.disabled = false; }
         }
 
@@ -202,8 +184,8 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
                 const data = await res.json();
-                tabla.innerHTML = data.length === 0 ? "<tr><td>No tienes citas próximas.</td></tr>" :
-                    data.map(f => `<tr><td><b>${f[0]}</b> a las ${f[1]} (${f[4]}) <button class="del" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
+                tabla.innerHTML = data.length === 0 ? "<tr><td>Sin citas próximas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> - ${f[1]} (${f[4]}) <button class="del" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
             } catch (e) { console.log(e); }
         }
 
