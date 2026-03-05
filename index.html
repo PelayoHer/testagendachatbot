@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taller Agenda IA</title>
+    <title>Chat Taller IA</title>
     <style>
         :root {
             --main: #1a73e8;
@@ -24,7 +24,7 @@
 
         .container {
             width: 100%;
-            max-width: 550px;
+            max-width: 500px;
             height: 96vh;
             display: flex;
             flex-direction: column;
@@ -42,7 +42,6 @@
             flex-direction: column;
             gap: 15px;
             border: 1px solid #eee;
-            scroll-behavior: smooth;
         }
 
         .msg {
@@ -51,7 +50,7 @@
             border-radius: 20px;
             font-size: 15px;
             line-height: 1.5;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.02);
+            white-space: pre-wrap;
         }
 
         .user {
@@ -71,7 +70,7 @@
 
         .input-area {
             display: flex;
-            gap: 12px;
+            gap: 10px;
             background: white;
             padding: 12px 20px;
             border-radius: 50px;
@@ -94,38 +93,32 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: 600;
-            transition: 0.2s;
-        }
-
-        button:hover {
-            opacity: 0.9;
-            transform: scale(1.02);
         }
 
         .search-area {
-            margin-top: 15px;
+            margin-top: 10px;
             background: white;
-            padding: 18px;
+            padding: 15px;
             border-radius: 20px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            font-size: 13px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            font-size: 13px;
         }
 
         td {
-            padding: 10px 0;
-            border-bottom: 1px solid #f4f4f4;
-            color: #444;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .del-btn {
-            color: #ea4335;
+        .del {
+            color: red;
             cursor: pointer;
+            float: right;
             font-weight: bold;
             border: none;
             background: none;
@@ -136,19 +129,19 @@
 <body>
     <div class="container">
         <div id="chatWindow">
-            <div class="msg bot">¡Hola! Soy tu asistente del taller. Puedo darte cita para hoy o para las próximas
-                semanas. ¿Qué necesitas?</div>
+            <div class="msg bot">¡Hola! Soy tu asistente del taller. ¿Quieres pedir cita o consultar cuándo tienes que
+                venir?</div>
         </div>
         <div class="input-area">
-            <input type="text" id="userInput" placeholder="Escribe aquí tu mensaje..."
+            <input type="text" id="userInput" placeholder="Escribe aquí..."
                 onkeypress="if(event.key==='Enter') enviarChat()">
             <button id="btnSend" onclick="enviarChat()">Enviar</button>
         </div>
         <div class="search-area">
             <div style="display: flex; gap: 10px;">
-                <input type="text" id="searchId" style="border: 1px solid #ddd; border-radius: 12px; padding: 10px;"
+                <input type="text" id="searchId" style="border: 1px solid #ddd; border-radius: 10px; padding: 8px;"
                     placeholder="Tu Nombre para buscar">
-                <button style="background: #34a853; width: auto;" onclick="listarPrivado()">Ver Mis Citas</button>
+                <button style="background: #34a853; width: auto;" onclick="listarPrivado()">Ver Agenda</button>
             </div>
             <table id="miAgenda"></table>
         </div>
@@ -173,13 +166,13 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "RESERVAR", history: chatHistory }) });
                 const data = await res.json();
-                const botMsg = data.botResponse || "Dime algo más de información, por favor.";
+                const botMsg = data.botResponse || "Lo siento, no te he entendido bien.";
                 chat.innerHTML += `<div class="msg bot">${botMsg}</div>`;
                 chatHistory.push({ role: "model", parts: [{ text: botMsg }] });
                 chat.scrollTop = chat.scrollHeight;
-                if (data.success) listarPrivado();
+                if (data.success && data.botResponse.includes("confirmada")) listarPrivado();
             } catch (e) {
-                chat.innerHTML += `<div class="msg bot" style="color:red">He tenido un problema al conectar. ¿Podrías repetir?</div>`;
+                chat.innerHTML += `<div class="msg bot" style="color:red">Error de conexión. Reintenta.</div>`;
             } finally { btn.disabled = false; }
         }
 
@@ -190,13 +183,13 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
                 const data = await res.json();
-                tabla.innerHTML = data.length === 0 ? "<tr><td>No tienes citas próximas registradas.</td></tr>" :
-                    data.map(f => `<tr><td><b>${f[0]}</b> a las ${f[1]} (${f[4]})</td><td><button class="del-btn" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
-            } catch (e) { console.error(e); }
+                tabla.innerHTML = data.length === 0 ? "<tr><td>Sin citas próximas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> - ${f[1]} (${f[4]}) <button class="del" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
+            } catch (e) { console.log(e); }
         }
 
         async function eliminar(id) {
-            if (!confirm("¿Seguro que quieres cancelar la cita?")) return;
+            if (!confirm("¿Borrar cita?")) return;
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "ELIMINAR", id: id }) });
             listarPrivado();
         }
