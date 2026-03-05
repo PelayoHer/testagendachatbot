@@ -3,129 +3,218 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Agenda IA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Taller IA</title>
     <style>
+        :root {
+            --main: #1a73e8;
+            --bot: #f1f3f4;
+            --bg: #f8f9fa;
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f2f5;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            margin: 0;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
         }
 
-        #chat {
+        .container {
             width: 100%;
-            max-width: 450px;
-            height: 400px;
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            overflow-y: auto;
+            max-width: 500px;
+            height: 96vh;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        #chatWindow {
+            flex-grow: 1;
+            background: white;
+            border-radius: 25px;
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid #eee;
         }
 
         .msg {
-            padding: 10px 15px;
-            border-radius: 15px;
-            max-width: 80%;
-            font-size: 14px;
+            max-width: 85%;
+            padding: 14px 18px;
+            border-radius: 20px;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
         }
 
-        .u {
+        .user {
             align-self: flex-end;
-            background: #1a73e8;
+            background: var(--main);
             color: white;
+            border-bottom-right-radius: 5px;
         }
 
-        .b {
+        .bot {
             align-self: flex-start;
-            background: #e8f0fe;
-            color: #333;
+            background: var(--bot);
+            color: #1a1f23;
+            border-bottom-left-radius: 5px;
+            border: 1px solid #e8e8e8;
         }
 
-        .box {
-            width: 100%;
-            max-width: 450px;
+        .input-area {
             display: flex;
-            gap: 5px;
-            margin-top: 10px;
+            gap: 10px;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         input {
             flex-grow: 1;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
+            border: none;
             outline: none;
+            font-size: 16px;
+            background: transparent;
         }
 
         button {
-            background: #1a73e8;
+            background: var(--main);
             color: white;
             border: none;
-            padding: 10px 15px;
-            border-radius: 10px;
+            padding: 10px 25px;
+            border-radius: 25px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            transition: 0.2s;
         }
 
-        #agenda {
-            margin-top: 20px;
-            font-size: 12px;
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .search-area {
+            margin-top: 10px;
             background: white;
-            padding: 10px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            font-size: 14px;
+        }
+
+        table {
             width: 100%;
-            max-width: 450px;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        td {
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .del-btn {
+            color: red;
+            font-weight: bold;
+            border: none;
+            background: none;
+            cursor: pointer;
+            float: right;
+            padding: 5px;
         }
     </style>
 </head>
 
 <body>
-    <h3>🤖 Asistente Virtual</h3>
-    <div id="chat">
-        <div class="msg b">¡Hola! ¿Qué día y hora quieres tu cita?</div>
+    <div class="container">
+        <div id="chatWindow">
+            <div class="msg bot">¡Hola! Soy tu asistente del taller. ¿Quieres pedir cita o consultar cuándo tienes que
+                venir?</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="userInput" placeholder="Escribe aquí tu mensaje..."
+                onkeypress="if(event.key==='Enter') enviarChat()">
+            <button id="btnSend" onclick="enviarChat()">Enviar</button>
+        </div>
+        <div class="search-area">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="searchId"
+                    style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; width: 60%;"
+                    placeholder="Tu Nombre para buscar">
+                <button style="background: #34a853; width: 40%;" onclick="listarPrivado()">Ver mi Agenda</button>
+            </div>
+            <table id="miAgenda"></table>
+        </div>
     </div>
-    <div class="box">
-        <input type="text" id="in" placeholder="Escribe aquí...">
-        <button id="btn" onclick="talk()">Enviar</button>
-    </div>
-    <div class="box">
-        <input type="text" id="sid" placeholder="Tu Nombre para ver citas">
-        <button onclick="list()" style="background:#34a853">Ver Agenda</button>
-    </div>
-    <div id="agenda"></div>
 
     <script>
-        const URL = "TU_URL_DE_APPS_SCRIPT";
-        let hist = [];
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec";
+        let chatHistory = [];
 
-        async function talk() {
-            const i = document.getElementById('in');
-            const c = document.getElementById('chat');
-            if (!i.value) return;
+        async function enviarChat() {
+            const input = document.getElementById('userInput');
+            const chat = document.getElementById('chatWindow');
+            const btn = document.getElementById('btnSend');
+            const msg = input.value.trim();
+            if (!msg) return;
 
-            c.innerHTML += `<div class="msg u">${i.value}</div>`;
-            hist.push({ role: "user", parts: [{ text: i.value }] });
-            const msg = i.value; i.value = ""; c.scrollTop = c.scrollHeight;
+            // Mostrar mensaje del usuario
+            chat.innerHTML += `<div class="msg user">${msg}</div>`;
+            input.value = ""; btn.disabled = true;
+            chat.scrollTop = chat.scrollHeight;
 
-            const res = await fetch(URL, { method: 'POST', body: JSON.stringify({ action: "RESERVAR", history: hist }) });
-            const data = await res.json();
+            // Guardar en historial
+            chatHistory.push({ role: "user", parts: [{ text: msg }] });
 
-            c.innerHTML += `<div class="msg b">${data.botResponse}</div>`;
-            hist.push({ role: "model", parts: [{ text: data.botResponse }] });
-            c.scrollTop = c.scrollHeight;
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "RESERVAR", history: chatHistory })
+                });
+                const data = await res.json();
+
+                const botMsg = data.botResponse || "¿Podrías repetirlo, por favor?";
+                chat.innerHTML += `<div class="msg bot">${botMsg}</div>`;
+
+                // Guardar respuesta del bot en el historial
+                chatHistory.push({ role: "model", parts: [{ text: botMsg }] });
+                chat.scrollTop = chat.scrollHeight;
+
+                if (data.success && data.botResponse.includes("confirmada")) {
+                    listarPrivado();
+                }
+            } catch (e) {
+                chat.innerHTML += `<div class="msg bot" style="color:red">Ocurrió un error de conexión. ¿Puedes intentarlo de nuevo?</div>`;
+            } finally {
+                btn.disabled = false;
+                input.focus();
+            }
         }
 
-        async function list() {
-            const id = document.getElementById('sid').value;
-            const res = await fetch(URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
-            const data = await res.json();
-            document.getElementById('agenda').innerHTML = data.map(f => `<p>📅 <b>${f[0]}</b> - ${f[1]}</p>`).join('') || "Sin citas.";
+        async function listarPrivado() {
+            const id = document.getElementById('searchId').value;
+            const tabla = document.getElementById('miAgenda');
+            if (!id) return;
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
+                const data = await res.json();
+                tabla.innerHTML = data.length === 0 ? "<tr><td>No tienes citas próximas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> a las ${f[1]}</td><td><button class="del-btn" onclick="eliminar('${f[5]}')">✕ Cancelar</button></td></tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function eliminar(id) {
+            if (!confirm("¿Seguro que quieres cancelar la cita?")) return;
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "ELIMINAR", id: id }) });
+            listarPrivado();
         }
     </script>
 </body>
