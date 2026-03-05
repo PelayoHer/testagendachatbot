@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Tienda IA</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-hover: #4338CA;
+            --bot-bg: #F3F4F6;
+            --user-bg: #4F46E5;
+            --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --text-dark: #1F2937;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .app-wrapper {
+            width: 100%;
+            max-width: 480px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            flex-grow: 1;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: var(--text-dark);
+            border-bottom: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .chat-body {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            scroll-behavior: smooth;
+        }
+
+        .bubble {
+            max-width: 82%;
+            padding: 14px 18px;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            white-space: pre-line;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user {
+            align-self: flex-end;
+            background: var(--user-bg);
+            color: white;
+            border-radius: 20px 20px 4px 20px;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .bot {
+            align-self: flex-start;
+            background: var(--bot-bg);
+            color: var(--text-dark);
+            border-radius: 20px 20px 20px 4px;
+        }
+
+        /* Input Area */
+        .input-box {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            gap: 12px;
+        }
+
+        input[type="text"] {
+            flex-grow: 1;
+            border: 2px solid #E5E7EB;
+            border-radius: 24px;
+            padding: 12px 20px;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        .btn-send {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 0 24px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-send:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .typing {
+            display: none;
+            align-self: flex-start;
+            background: transparent;
+            color: #6B7280;
+            font-style: italic;
+            font-size: 14px;
+            padding: 0 10px;
+        }
+
+        /* Agenda Panel */
+        .agenda-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .agenda-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-agenda {
+            background: #10B981;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px 4px;
+            border-bottom: 1px solid #F3F4F6;
+            color: var(--text-dark);
+        }
+
+        .btn-del {
+            color: #EF4444;
+            font-weight: bold;
+            border: none;
+            background: none;
+            cursor: pointer;
+            float: right;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-wrapper">
+        <div class="chat-container">
+            <div class="header">🛍️ Asistente de Tienda</div>
+            <div class="chat-body" id="chatWindow">
+                <div class="bubble bot">¡Hola! Soy el asistente virtual de la tienda. ¿Quieres que te agende una cita o
+                    necesitas consultar tus reservas?</div>
+                <div id="typingIndicator" class="typing">Escribiendo...</div>
+            </div>
+            <div class="input-box">
+                <input type="text" id="userInput" placeholder="Escribe tu mensaje..."
+                    onkeypress="if(event.key==='Enter') enviarChat()">
+                <button class="btn-send" id="btnSend" onclick="enviarChat()">Enviar</button>
+            </div>
+        </div>
+
+        <div class="agenda-panel">
+            <div class="agenda-controls">
+                <input type="text" id="searchId" placeholder="Tu nombre para ver agenda">
+                <button class="btn-agenda" onclick="listarPrivado()">Ver Citas</button>
+            </div>
+            <table id="miAgenda"></table>
+        </div>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec";
+        let chatHistory = [];
+
+        async function enviarChat() {
+            const input = document.getElementById('userInput');
+            const chat = document.getElementById('chatWindow');
+            const btn = document.getElementById('btnSend');
+            const typing = document.getElementById('typingIndicator');
+            const msg = input.value.trim();
+
+            if (!msg) return;
+
+            // Añadir burbuja de usuario
+            const userMsg = document.createElement('div');
+            userMsg.className = 'bubble user';
+            userMsg.innerText = msg;
+            chat.insertBefore(userMsg, typing);
+
+            input.value = "";
+            btn.disabled = true;
+            chat.scrollTop = chat.scrollHeight;
+
+            chatHistory.push({ role: "user", text: msg });
+
+            // Mostrar indicador "Escribiendo..."
+            typing.style.display = "block";
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const res = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "CHAT", history: chatHistory })
+                });
+                const data = await res.json();
+
+                typing.style.display = "none";
+
+                const botText = data.botResponse || "¿Disculpa, podrías decírmelo de otra forma?";
+
+                const botMsg = document.createElement('div');
+                botMsg.className = 'bubble bot';
+                botMsg.innerText = botText;
+                chat.insertBefore(botMsg, typing);
+
+                chatHistory.push({ role: "model", text: botText });
+                chat.scrollTop = chat.scrollHeight;
+
+                if (data.success && botText.includes("confirmada")) listarPrivado();
+
+            } catch (e) {
+                typing.style.display = "none";
+                const errNode = document.createElement('div');
+                errNode.className = 'bubble bot';
+                errNode.style.color = "#EF4444";
+                errNode.innerText = "He perdido la conexión. Por favor, reintenta.";
+                chat.insertBefore(errNode, typing);
+                chat.scrollTop = chat.scrollHeight;
+            } finally {
+                btn.disabled = false;
+                input.focus();
+            }
+        }
+
+        async function listarPrivado() {
+            const id = document.getElementById('searchId').value;
+            const tabla = document.getElementById('miAgenda');
+            if (!id) return;
+            try {
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
+                const data = await res.json();
+                tabla.innerHTML = data.length === 0 ? "<tr><td style='text-align:center; color:#6B7280;'>No tienes citas agendadas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> a las ${f[1]}</td><td><button class="btn-del" onclick="eliminar('${f[5]}')">✕ Anular</button></td></tr>`).join('');
+            } catch (e) { console.error(e); }
+        }
+
+        async function eliminar(id) {
+            if (!confirm("¿Cancelar esta reserva definitivamente?")) return;
+            await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "ELIMINAR", id: id }) });
+            listarPrivado();
+        }
+    </script>
+</body>
+
+</html>
