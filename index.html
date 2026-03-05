@@ -30,7 +30,6 @@
             height: 90vh;
         }
 
-        /* Área de Chat */
         #chatWindow {
             flex-grow: 1;
             background: white;
@@ -66,7 +65,6 @@
             border-bottom-left-radius: 2px;
         }
 
-        /* Input */
         .input-area {
             display: flex;
             gap: 8px;
@@ -94,7 +92,6 @@
             font-weight: bold;
         }
 
-        /* Agenda Privada */
         .agenda-search {
             margin-top: 20px;
             width: 100%;
@@ -122,26 +119,22 @@
 </head>
 
 <body>
-
     <div class="container">
         <h3 style="color: var(--user-bg); margin-top: 0;">🤖 Asistente de Citas</h3>
-
         <div id="chatWindow">
-            <div class="msg bot">¡Hola! Soy tu asistente. ¿Para qué día y hora quieres tu cita o quieres consultar
-                disponibilidad?</div>
+            <div class="msg bot">¡Hola! Soy tu asistente. Puedo ayudarte a reservar para la semana que viene. ¿Qué día
+                te gustaría venir?</div>
         </div>
-
         <div class="input-area">
             <input type="text" id="userInput" placeholder="Escribe aquí..."
                 onkeypress="if(event.key==='Enter') enviarChat()">
             <button id="btnSend" onclick="enviarChat()">Enviar</button>
         </div>
-
         <div class="agenda-search">
             <div class="search-card">
                 <div style="display: flex; gap: 5px;">
                     <input type="text" id="searchId" style="border: 1px solid #ddd; border-radius: 8px; padding: 5px;"
-                        placeholder="Tu Nombre/ID para ver citas">
+                        placeholder="Tu Nombre para ver citas">
                     <button style="background: #34a853; padding: 5px 10px; font-size: 12px;"
                         onclick="listarPrivado()">Ver mi agenda</button>
                 </div>
@@ -152,23 +145,19 @@
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec";
-        let chatHistory = []; // Aquí guardamos la memoria del chat
+        let chatHistory = [];
 
         async function enviarChat() {
             const input = document.getElementById('userInput');
             const chat = document.getElementById('chatWindow');
             const btn = document.getElementById('btnSend');
             const msg = input.value.trim();
-
             if (!msg) return;
 
-            // 1. Mostrar mensaje del usuario
             chat.innerHTML += `<div class="msg user">${msg}</div>`;
             input.value = "";
             btn.disabled = true;
             chat.scrollTop = chat.scrollHeight;
-
-            // 2. Guardar en el historial
             chatHistory.push({ role: "user", parts: [{ text: msg }] });
 
             try {
@@ -177,16 +166,11 @@
                     body: JSON.stringify({ action: "RESERVAR", history: chatHistory })
                 });
                 const data = await res.json();
-
-                // 3. Mostrar respuesta del bot
                 const botMsg = data.botResponse || "Entendido.";
                 chat.innerHTML += `<div class="msg bot">${botMsg}</div>`;
-
-                // Guardar respuesta del bot en el historial para el contexto
                 chatHistory.push({ role: "model", parts: [{ text: botMsg }] });
-
                 chat.scrollTop = chat.scrollHeight;
-                if (data.success) listarPrivado(); // Actualiza si hubo reserva
+                if (data.success) listarPrivado();
             } catch (e) {
                 chat.innerHTML += `<div class="msg bot" style="color:red">Error de conexión.</div>`;
             } finally { btn.disabled = false; }
@@ -196,25 +180,11 @@
             const id = document.getElementById('searchId').value;
             const tabla = document.getElementById('miAgenda');
             if (!id) return;
-
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "LISTAR", searchId: id })
-                });
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
                 const data = await res.json();
-
-                if (data.length === 0) {
-                    tabla.innerHTML = "<tr><td>No tienes citas agendadas aún.</td></tr>";
-                    return;
-                }
-
-                tabla.innerHTML = data.map(f => `
-                <tr>
-                    <td><b>${f[0]}</b> - ${f[1]}</td>
-                    <td><button style="background:none; color:red; border:none; cursor:pointer" onclick="eliminar('${f[5]}')">✕</button></td>
-                </tr>
-            `).join('');
+                tabla.innerHTML = data.length === 0 ? "<tr><td>Sin citas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> - ${f[1]} (${f[4]})</td><td><button style="background:none; color:red; border:none; cursor:pointer" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
             } catch (e) { console.log(e); }
         }
 
