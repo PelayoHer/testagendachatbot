@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Agenda</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; background: #f4f4f9; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background: #1a73e8; color: white; border: none; cursor: pointer; border-radius: 4px; }
+        button.delete { background: #d93025; width: auto; padding: 5px 10px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border-bottom: 1px solid #ddd; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h3>📅 Nueva Cita (IA Gemini)</h3>
+        <input type="text" id="userInput" placeholder="Ej: Corte para Luis mañana a las 5pm">
+        <button onclick="ejecutarAccion('RESERVAR')">Agendar con IA</button>
+    </div>
+
+    <div class="card">
+        <h3>📋 Citas en el Sheets</h3>
+        <button style="background:#34a853" onclick="ejecutarAccion('LISTAR')">Actualizar Lista</button>
+        <table id="tablaCitas">
+            <thead>
+                <tr><th>Fecha</th><th>Hora</th><th>Cliente</th><th>Acción</th></tr>
+            </thead>
+            <tbody id="cuerpoTabla"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec"; // <--- PEGA TU URL AQUÍ
+
+        async function ejecutarAccion(accion, extraData = {}) {
+            const body = { action: accion, ...extraData };
+            if (accion === 'RESERVAR') body.message = document.getElementById('userInput').value;
+
+            try {
+                const response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(body) });
+                const res = await response.json();
+                if (accion === 'LISTAR') { 
+                    dibujarTabla(res); 
+                } else { 
+                    alert(res); 
+                    ejecutarAccion('LISTAR'); 
+                }
+            } catch (e) { alert("Error de conexión. Asegúrate de que la App Web esté publicada como 'Cualquier persona'."); }
+        }
+
+        function dibujarTabla(datos) {
+            const tabla = document.getElementById('cuerpoTabla');
+            tabla.innerHTML = "";
+            datos.forEach(fila => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${fila[0]}</td><td>${fila[1]}</td><td>${fila[2]}</td>
+                    <td><button class="delete" onclick="eliminarCita('${fila[5]}')">Quitar</button></td>
+                `;
+                tabla.appendChild(tr);
+            });
+        }
+
+        function eliminarCita(id) {
+            if(confirm("¿Borrar cita " + id + "?")) ejecutarAccion('ELIMINAR', { id: id });
+        }
+    </script>
+</body>
+</html>
