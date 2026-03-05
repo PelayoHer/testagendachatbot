@@ -4,11 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat Agenda IA</title>
+    <title>Chat Agenda Pro</title>
     <style>
         :root {
-            --user-bg: #1a73e8;
-            --bot-bg: #f1f3f4;
+            --main: #1a73e8;
+            --bot: #f1f3f4;
             --bg: #f8f9fa;
         }
 
@@ -16,7 +16,7 @@
             font-family: 'Segoe UI', sans-serif;
             background: var(--bg);
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -25,9 +25,9 @@
         .container {
             width: 100%;
             max-width: 500px;
+            height: 95vh;
             display: flex;
             flex-direction: column;
-            height: 90vh;
         }
 
         #chatWindow {
@@ -37,93 +37,89 @@
             padding: 20px;
             overflow-y: auto;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            border: 1px solid #eee;
         }
 
         .msg {
-            max-width: 80%;
+            max-width: 85%;
             padding: 12px 16px;
             border-radius: 18px;
             font-size: 15px;
             line-height: 1.4;
+            word-wrap: break-word;
         }
 
         .user {
             align-self: flex-end;
-            background: var(--user-bg);
+            background: var(--main);
             color: white;
-            border-bottom-right-radius: 2px;
+            border-bottom-right-radius: 4px;
         }
 
         .bot {
             align-self: flex-start;
-            background: var(--bot-bg);
-            color: #333;
-            border-bottom-left-radius: 2px;
+            background: var(--bot);
+            color: #222;
+            border-bottom-left-radius: 4px;
         }
 
         .input-area {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             background: white;
-            padding: 10px;
-            border-radius: 15px;
+            padding: 12px;
+            border-radius: 50px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
         }
 
         input {
             flex-grow: 1;
             border: none;
-            padding: 10px;
+            padding: 5px 10px;
             outline: none;
             font-size: 16px;
         }
 
         button {
-            background: var(--user-bg);
+            background: var(--main);
             color: white;
             border: none;
             padding: 10px 20px;
-            border-radius: 10px;
+            border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
         }
 
         .agenda-search {
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        .search-card {
+            margin-top: 10px;
             background: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 15px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            font-size: 13px;
         }
 
         table {
             width: 100%;
-            font-size: 13px;
-            margin-top: 10px;
             border-collapse: collapse;
+            margin-top: 5px;
         }
 
         td {
             padding: 8px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #f0f0f0;
         }
     </style>
 </head>
 
 <body>
     <div class="container">
-        <h3 style="color: var(--user-bg); margin-top: 0;">🤖 Asistente de Citas</h3>
         <div id="chatWindow">
-            <div class="msg bot">¡Hola! Soy tu asistente. Puedo ayudarte a reservar para la semana que viene. ¿Qué día
-                te gustaría venir?</div>
+            <div class="msg bot">¡Hola! Soy tu asistente. ¿Para cuándo quieres tu cita o qué quieres consultar?</div>
         </div>
         <div class="input-area">
             <input type="text" id="userInput" placeholder="Escribe aquí..."
@@ -131,49 +127,40 @@
             <button id="btnSend" onclick="enviarChat()">Enviar</button>
         </div>
         <div class="agenda-search">
-            <div class="search-card">
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="searchId" style="border: 1px solid #ddd; border-radius: 8px; padding: 5px;"
-                        placeholder="Tu Nombre para ver citas">
-                    <button style="background: #34a853; padding: 5px 10px; font-size: 12px;"
-                        onclick="listarPrivado()">Ver mi agenda</button>
-                </div>
-                <table id="miAgenda"></table>
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="searchId"
+                    style="border: 1px solid #ddd; border-radius: 10px; padding: 8px; width: 60%;"
+                    placeholder="Tu Nombre">
+                <button style="background: #34a853; width: 40%;" onclick="listarPrivado()">Ver Agenda</button>
             </div>
+            <table id="miAgenda"></table>
         </div>
     </div>
 
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec";
+        const SCRIPT_URL = "[https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec](https://script.google.com/macros/s/AKfycbz5oekJtP0IYtjHyfiXYSLRS9onSLs9EJes_j-82lnuEpSiw45_OVh7wpkbuFpo17OPMA/exec)";
         let chatHistory = [];
 
         async function enviarChat() {
             const input = document.getElementById('userInput');
             const chat = document.getElementById('chatWindow');
-            const btn = document.getElementById('btnSend');
             const msg = input.value.trim();
             if (!msg) return;
 
             chat.innerHTML += `<div class="msg user">${msg}</div>`;
-            input.value = "";
-            btn.disabled = true;
-            chat.scrollTop = chat.scrollHeight;
+            input.value = ""; chat.scrollTop = chat.scrollHeight;
             chatHistory.push({ role: "user", parts: [{ text: msg }] });
 
             try {
-                const res = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "RESERVAR", history: chatHistory })
-                });
+                const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "RESERVAR", history: chatHistory }) });
                 const data = await res.json();
-                const botMsg = data.botResponse || "Entendido.";
+                const botMsg = data.botResponse || "Dime algo más.";
                 chat.innerHTML += `<div class="msg bot">${botMsg}</div>`;
                 chatHistory.push({ role: "model", parts: [{ text: botMsg }] });
                 chat.scrollTop = chat.scrollHeight;
-                if (data.success) listarPrivado();
             } catch (e) {
-                chat.innerHTML += `<div class="msg bot" style="color:red">Error de conexión.</div>`;
-            } finally { btn.disabled = false; }
+                chat.innerHTML += `<div class="msg bot" style="color:red">Error. Prueba de nuevo.</div>`;
+            }
         }
 
         async function listarPrivado() {
@@ -183,13 +170,13 @@
             try {
                 const res = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "LISTAR", searchId: id }) });
                 const data = await res.json();
-                tabla.innerHTML = data.length === 0 ? "<tr><td>Sin citas.</td></tr>" :
-                    data.map(f => `<tr><td><b>${f[0]}</b> - ${f[1]} (${f[4]})</td><td><button style="background:none; color:red; border:none; cursor:pointer" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
+                tabla.innerHTML = data.length === 0 ? "<tr><td>No hay citas.</td></tr>" :
+                    data.map(f => `<tr><td><b>${f[0]}</b> - ${f[1]}</td><td><button style="background:none; color:red; border:none; cursor:pointer" onclick="eliminar('${f[5]}')">✕</button></td></tr>`).join('');
             } catch (e) { console.log(e); }
         }
 
         async function eliminar(id) {
-            if (!confirm("¿Borrar cita?")) return;
+            if (!confirm("¿Borrar?")) return;
             await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: "ELIMINAR", id: id }) });
             listarPrivado();
         }
